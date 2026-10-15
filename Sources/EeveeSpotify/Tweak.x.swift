@@ -41,9 +41,9 @@ struct LatestPremiumPatchingGroup: HookGroup { }
 // Early 9.1.x builds dropped the offline helper; newer ones bring it back.
 func activateV91ServerSidedReminderIfAvailable() {
     let className = ContentOffliningUIHelperImplementationModernHook.targetName
-    let selector = Selector((
+    let selector = NSSelectorFromString(
         "downloadToggledWithCurrentAvailability:addAction:removeAction:pageIdentifier:pageURI:interactionID:"
-    ))
+    )
 
     guard let cls = NSClassFromString(className),
           class_getInstanceMethod(cls, selector) != nil else {
@@ -64,7 +64,7 @@ func activatePremiumPatchingGroup() {
     else if EeveeSpotify.hookTarget == .v91 {
         NonIOS14PremiumPatchingGroup().activate()
         // Removed in 9.1.28; hooking a missing method is fatal.
-        let trackRowsSel = Selector(("initWithViewURI:onDemandSet:onDemandTrialService:trackRowsEnabled:productState:"))
+        let trackRowsSel = NSSelectorFromString("initWithViewURI:onDemandSet:onDemandTrialService:trackRowsEnabled:productState:")
         if UIView.instancesRespond(to: trackRowsSel) {
             V91PremiumPatchingGroup().activate()
         }
@@ -104,11 +104,11 @@ func activateSessionLogoutProtection(minimal: Bool) {
 
     if let cls = NSClassFromString("SPTAuthSessionImplementation") {
         let required: [Selector] = [
-            Selector(("logout")),
-            Selector(("logoutWithReason:")),
-            Selector(("callSessionDidLogoutOnDelegateWithReason:")),
-            Selector(("logWillLogoutEventWithLogoutReason:")),
-            Selector(("destroy")),
+            NSSelectorFromString("logout"),
+            NSSelectorFromString("logoutWithReason:"),
+            NSSelectorFromString("callSessionDidLogoutOnDelegateWithReason:"),
+            NSSelectorFromString("logWillLogoutEventWithLogoutReason:"),
+            NSSelectorFromString("destroy"),
         ]
         let ok = required.allSatisfy { classHasInstanceMethod(cls, $0) }
         if ok {
@@ -123,9 +123,9 @@ func activateSessionLogoutProtection(minimal: Bool) {
 
     if let cls = NSClassFromString("_TtC24Connectivity_SessionImpl18SessionServiceImpl") {
         let required: [Selector] = [
-            Selector(("automatedLogoutThenLogin")),
-            Selector(("userInitiatedLogout")),
-            Selector(("sessionDidLogout:withReason:")),
+            NSSelectorFromString("automatedLogoutThenLogin"),
+            NSSelectorFromString("userInitiatedLogout"),
+            NSSelectorFromString("sessionDidLogout:withReason:"),
         ]
         let ok = required.allSatisfy { classHasInstanceMethod(cls, $0) }
         if ok {
@@ -140,8 +140,8 @@ func activateSessionLogoutProtection(minimal: Bool) {
 
     if let cls = NSClassFromString("ARTWebSocketTransport") {
         let required: [Selector] = [
-            Selector(("webSocket:didReceiveMessage:")),
-            Selector(("webSocket:didFailWithError:")),
+            NSSelectorFromString("webSocket:didReceiveMessage:"),
+            NSSelectorFromString("webSocket:didFailWithError:"),
         ]
         let ok = required.allSatisfy { classHasInstanceMethod(cls, $0) }
         if ok {
@@ -306,7 +306,7 @@ struct EeveeSpotify: Tweak {
                 writeDebugLog("[INIT] Activated PremiumBootstrapGroup")
 
                 if let hub = NSClassFromString("HUBViewModelBuilderImplementation"),
-                   class_getInstanceMethod(hub, Selector(("addJSONDictionary:"))) != nil {
+                   class_getInstanceMethod(hub, NSSelectorFromString("addJSONDictionary:")) != nil {
                     PremiumUIHooksGroup().activate()
                 } else {
                     writeDebugLog("[INIT] Skipped PremiumUIHooksGroup (missing HUBViewModelBuilderImplementation/addJSONDictionary:)")
@@ -348,9 +348,9 @@ struct EeveeSpotify: Tweak {
             }
 
             if let cls = NSClassFromString("ProfileSettingsSection"),
-               class_getInstanceMethod(cls, Selector(("numberOfRows"))) != nil,
-               class_getInstanceMethod(cls, Selector(("didSelectRow:"))) != nil,
-               class_getInstanceMethod(cls, Selector(("cellForRow:"))) != nil {
+               class_getInstanceMethod(cls, NSSelectorFromString("numberOfRows")) != nil,
+               class_getInstanceMethod(cls, NSSelectorFromString("didSelectRow:")) != nil,
+               class_getInstanceMethod(cls, NSSelectorFromString("cellForRow:")) != nil {
 
                 UniversalSettingsIntegrationProfileGroup().activate()
 
